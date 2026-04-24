@@ -1,0 +1,365 @@
+single_choice: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道单项选择题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 单项选择题
+  - 题目类型: {question_type}
+
+  【输出格式】
+  请严格按照以下JSON格式输出，不要添加任何其他内容：
+  ```json
+  {{
+    "question": "题目内容（清晰明确的问题）",
+    "options": {{
+      "A": "选项A内容",
+      "B": "选项B内容",
+      "C": "选项C内容",
+      "D": "选项D内容"
+    }},
+    "correct_answer": "正确答案字母（如：B）",
+    "explanation": "详细解析，说明为什么该答案正确，其他选项为什么错误",
+    "difficulty": "难度等级（easy/medium/hard，根据题目复杂度判断）"
+  }}
+  ```
+
+  【质量要求】
+  1. 题目必须准确反映该技术的核心特点或应用场景
+  2. 正确答案必须唯一且明确
+  3. 干扰选项应具有合理迷惑性，但不能产生歧义
+  4. 解析应详细说明答案的正确性，并分析其他选项的错误原因
+  5. 避免使用"以上都是"或"以上都不是"等模糊选项
+  6. 难度判断标准：easy-基础概念题，medium-应用理解题，hard-综合分析题
+
+multiple_choice: |
+  你是一名网络安全专家，熟悉MITRE ATT&CK框架。
+  
+  请根据MITRE ATT&CK框架中**{tactic_name}** ({tactic_id})战术下的技术生成{num_questions}道高质量多选题。
+  
+  【战术信息】
+  - 战术: {tactic_name} ({tactic_id})
+  - 战术描述: {tactic_description}
+  - 相关技术: 
+  {techniques_list}
+  
+  【题目要求】
+  - 题型: 多项选择题
+  - 题目类型: {question_type}
+  - **重要**: 每道题目必须从上述技术列表中选择**3-6个有关联的技术**进行组合
+  - 考察这些技术之间的关联关系、执行顺序或依赖关系
+  - 题目之间的技术覆盖应不完全重合
+  - 每道题选项为5个（A、B、C、D、E）
+  - 每道题正确答案为2-4个
+  - 要适当加入干扰选项增加难度
+  
+  【输出格式】
+  请严格按照以下JSON格式输出，不要添加任何其他内容：
+  ```json
+  [
+    {{
+      "question": "题目内容",
+      "options": {{
+        "A": "选项A内容",
+        "B": "选项B内容",
+        "C": "选项C内容",
+        "D": "选项D内容",
+        "E": "选项E内容"
+      }},
+      "correct_answer": ["正确答案字母数组"],
+      "explanation": "详细解析",
+      "difficulty": "难度等级",
+      "involved_techniques": ["涉及的技术ID列表"]
+    }},
+    {{
+      "question": "第二道题目内容",
+      "options": {{
+        "A": "选项A内容",
+        "B": "选项B内容",
+        "C": "选项C内容",
+        "D": "选项D内容",
+        "E": "选项E内容"
+      }},
+      "correct_answer": ["正确答案字母数组"],
+      "explanation": "详细解析",
+      "difficulty": "难度等级",
+      "involved_techniques": ["涉及的技术ID列表"]
+    }}
+  ]
+  ```
+
+  【质量要求】
+  1. 必须从提供的技术列表中选择多个技术进行组合
+  2. 选择的技术应有明确的关联关系
+  3. 题目必须准确反映技术之间的关联关系
+  4. 正确答案数量应在2-4个之间
+  5. 题目应明确指出需要选择"所有正确答案"
+  6. 每个选项都应独立可判断
+  7. 解析应逐一分析每个选项
+  8. 干扰选项应具有合理迷惑性，但不能产生歧义
+  9. 难度判断标准：easy-基础概念题，medium-应用理解题，hard-综合分析题
+
+true_false: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道判断题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 判断题
+  - 考察重点: {focus_area}
+
+  【输出格式】
+  请严格按照以下JSON格式输出：
+  ```json
+  {{
+    "question": "陈述句形式的题目内容",
+    "correct_answer": "正确 或 错误",
+    "explanation": "详细解析，说明判断依据",
+    "difficulty": "难度等级（easy/medium/hard，根据题目复杂度判断）",
+    "knowledge_points": ["知识点1", "知识点2"]
+  }}
+  ```
+
+  【质量要求】
+  1. 题目必须是明确的陈述句，不能模棱两可
+  2. 正确答案必须明确为"正确"或"错误"
+  3. 解析应详细说明判断的依据
+
+sequencing: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成排序题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id})
+  - 战术描述: {tactic_description}
+  - 该战术下的所有技术: 
+  {techniques_list}
+
+  【题目要求】
+  - 题型: 排序题
+  - 问题类型: {question_type}
+  - 请一次性生成 {num_questions} 道排序题
+  - **重要**: 每道题目必须从上述技术列表中选择**3-6个有关联的技术**进行组合
+  - 考察这些技术之间的执行顺序、逻辑关系或依赖关系
+  - 每道题目提供4-6个步骤选项（对应选择的技术）
+  - 不同题目应选择不同的技术组合，避免重复
+  - 题目应清晰说明排序的依据
+
+  【输出格式】
+  请严格按照以下JSON格式输出，不要添加任何其他内容：
+  ```json
+  [
+    {{
+      "question": "题目内容（要求按照正确顺序排列）",
+      "options": {{
+        "A": "步骤A（技术名称）",
+        "B": "步骤B（技术名称）",
+        "C": "步骤C（技术名称）",
+        "D": "步骤D（技术名称）"
+      }},
+      "correct_answer": ["正确顺序数组", "如：[\"C\", \"A\", \"D\", \"B\"]"],
+      "explanation": "详细解析，说明为什么是这个顺序，涉及哪些技术",
+      "difficulty": "难度等级（easy/medium/hard）",
+      "involved_techniques": ["涉及的技术ID列表"]
+    }},
+    // 更多题目...
+  ]
+  ```
+
+  【质量要求】
+  1. 必须从提供的技术列表中选择多个技术进行组合
+  2. 选择的技术应有明确的逻辑顺序或依赖关系
+  3. 排序项应有明确的逻辑顺序
+  4. 题目应清晰说明排序的依据
+  5. 解析应说明每一步骤之间的逻辑关系
+  6. 每道题目应选择不同的技术组合，避免重复
+  7. 难度应根据题目复杂度合理设置
+
+fill_blank: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道填空题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 填空题
+  - 难度: {difficulty}
+  - 考察重点: 关键术语、工具名称、技术细节等
+
+  【输出格式】
+  请严格按照以下JSON格式输出：
+  ```json
+  {{
+    "question": "包含______（空格）的题目内容",
+    "correct_answer": "正确答案（可接受多个答案用/分隔）",
+    "explanation": "详细解析，说明答案的含义",
+    "knowledge_points": ["知识点1", "知识点2"]
+  }}
+  ```
+
+  【质量要求】
+  1. 空格位置应填入关键术语或概念
+  2. 答案应明确且无歧义
+  3. 如有多个可接受答案，用"/"分隔
+
+short_answer: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道问答题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 问答题
+  - 难度: {difficulty}
+  - 考察重点: 深度理解、分析能力
+
+  【输出格式】
+  请严格按照以下JSON格式输出：
+  ```json
+  {{
+    "question": "开放性问题",
+    "correct_answer": "参考答案（要点形式）",
+    "explanation": "详细解析，可包含评分要点",
+    "knowledge_points": ["知识点1", "知识点2"],
+    "scoring_points": [
+      "要点1（分数）",
+      "要点2（分数）"
+    ]
+  }}
+  ```
+
+  【质量要求】
+  1. 问题应具有开放性，但答案应有明确的评分标准
+  2. 参考答案应包含关键要点
+  3. 解析应说明评分标准
+
+scenario: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道场景题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 场景分析题
+  - 难度: {difficulty}
+  - 考察重点: 综合应用、实战分析
+
+  【输出格式】
+  请严格按照以下JSON格式输出：
+  ```json
+  {{
+    "scenario": "详细的攻击场景描述（包含背景、目标、环境等信息）",
+    "question": "基于场景的问题（可以是选择题或问答题形式）",
+    "options": {{
+      "A": "选项A（如果是选择题）",
+      "B": "选项B"
+    }},
+    "correct_answer": "正确答案",
+    "explanation": "详细解析，结合场景分析",
+    "knowledge_points": ["知识点1", "知识点2"],
+    "related_techniques": ["相关技术ID1", "相关技术ID2"]
+  }}
+  ```
+
+  【质量要求】
+  1. 场景描述应真实可信，具有实战背景
+  2. 场景应包含足够的上下文信息
+  3. 问题应紧密结合场景，考察综合分析能力
+  4. 解析应结合场景具体分析
+
+scenario_single_choice: |
+  你是一位网络安全渗透测试专家，熟悉MITRE ATT&CK框架。请根据以下要求生成一道场景化单项选择题：
+
+  【知识点信息】
+  - 战术: {tactic_name} ({tactic_id}) - {tactic_description}
+  - 技术: {technique_name} ({technique_id})
+  - 子技术: {sub_technique_name} ({sub_technique_id})
+  - 技术描述: {technique_description}
+
+  【题目要求】
+  - 题型: 场景化单项选择题
+  - 题目类型: scenario_single_choice
+  - 请先构造一个真实可信的攻击或防御分析场景，再基于该场景提出一个单项选择问题
+  - 场景需包含 2-4 个关键线索，例如攻击入口、执行痕迹、日志现象、通信行为、持久化迹象、检测或缓解动作
+  - 问题必须依赖场景信息才能作答，删除场景后不应轻易答出
+  - 正确答案必须唯一且明确
+  - 干扰项必须与场景相关，不能是明显错误的无关选项
+  - 可考察的方向包括：最可能使用的 ATT&CK 技术、最合理的下一步攻击动作、最合适的检测/缓解措施、最符合场景的攻击者行为判断
+
+  【输出格式】
+  请严格按照以下JSON格式输出，不要添加任何其他内容：
+  ```json
+  {{
+    "scenario": "场景描述，包含背景、攻击行为和关键线索",
+    "question": "基于场景提出的单项选择问题",
+    "options": {{
+      "A": "选项A内容",
+      "B": "选项B内容",
+      "C": "选项C内容",
+      "D": "选项D内容"
+    }},
+    "correct_answer": "正确答案字母（如：B）",
+    "explanation": "详细解析，说明为什么该答案最符合场景，并分析其他选项不成立的原因",
+    "difficulty": "难度等级（easy/medium/hard）",
+    "related_techniques": ["场景中涉及的ATT&CK技术ID1", "场景中涉及的ATT&CK技术ID2"],
+    "scenario_tags": ["场景标签1", "场景标签2"]
+  }}
+  ```
+
+  【质量要求】
+  1. 场景必须真实可信，具有明确上下文和可推断线索
+  2. 问题必须依赖场景信息，不能退化为普通知识题
+  3. 正确答案必须唯一，且与场景线索形成直接对应
+  4. 解析必须解释场景中的关键证据，并说明其他选项为什么不最优
+  5. related_techniques 至少包含当前技术或子技术，也可以补充场景中关联的其他技术
+  6. scenario_tags 使用简洁英文标签，如 phishing、powershell、lateral-movement、credential-access
+  7. 难度判断标准：easy-线索直接，medium-需要综合两到三个线索，hard-需要结合多阶段行为判断
+
+review: |
+  你是一位网络安全专家审核员，请审核以下渗透测试能力评估题目的质量：
+
+  【题目内容】
+  {question_data}
+
+  【审核要点】
+  1. 技术准确性：答案是否正确？技术描述是否准确？
+  2. 题目清晰度：表述是否明确无歧义？
+  3. 选项合理性：干扰项是否合理？是否有明显错误选项？
+  4. 解析完整性：解析是否充分？是否解释了正确答案的原因？
+  5. 知识点相关性：题目是否有效考察了目标知识点？
+
+  【输出格式】
+  请严格按照以下JSON格式输出：
+  ```json
+  {{
+    "is_valid": true或false,
+    "score": 0-100的评分,
+    "issues": ["发现的问题1", "发现的问题2"],
+    "suggestions": ["改进建议1", "改进建议2"],
+    "correctness_check": {{
+      "answer_correct": true或false,
+      "explanation_accurate": true或false
+    }},
+    "quality_check": {{
+      "clarity_score": 0-100,
+      "option_quality_score": 0-100,
+      "explanation_score": 0-100
+    }}
+  }}
+  ```

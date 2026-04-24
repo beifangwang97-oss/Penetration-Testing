@@ -1,0 +1,223 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ATT&CK渗透测试能力评估数据集Schema",
+  "description": "定义数据集中每条题目的标准格式",
+  "type": "object",
+  "required": [
+    "question_id",
+    "tactic",
+    "technique",
+    "sub_technique",
+    "question_type",
+    "difficulty",
+    "question",
+    "correct_answer",
+    "explanation",
+    "test_prompt",
+    "metadata"
+  ],
+  "properties": {
+    "question_id": {
+      "type": "string",
+      "pattern": "^T\\d+(\\.\\d+)?-[A-Z]{2}-\\d{3}$",
+      "description": "题目唯一标识，格式：技术ID-题型编码-序号，如T1566.001-SC-001"
+    },
+    "tactic": {
+      "type": "object",
+      "required": ["id", "name", "name_zh"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^TA\\d{4}$",
+          "description": "战术ID，如TA0001"
+        },
+        "name": {
+          "type": "string",
+          "description": "战术英文名称"
+        },
+        "name_zh": {
+          "type": "string",
+          "description": "战术中文名称"
+        }
+      }
+    },
+    "technique": {
+      "type": "object",
+      "required": ["id", "name", "name_zh"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^T\\d{4}$",
+          "description": "技术ID，如T1566"
+        },
+        "name": {
+          "type": "string",
+          "description": "技术英文名称"
+        },
+        "name_zh": {
+          "type": "string",
+          "description": "技术中文名称"
+        },
+        "description": {
+          "type": "string",
+          "description": "技术描述"
+        }
+      }
+    },
+    "sub_technique": {
+      "type": "object",
+      "required": ["id", "name", "name_zh"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^T\\d{4}\\.\\d{3}$",
+          "description": "子技术ID，如T1566.001"
+        },
+        "name": {
+          "type": "string",
+          "description": "子技术英文名称"
+        },
+        "name_zh": {
+          "type": "string",
+          "description": "子技术中文名称"
+        },
+        "description": {
+          "type": "string",
+          "description": "子技术描述"
+        }
+      }
+    },
+    "question_type": {
+      "type": "string",
+      "enum": ["single_choice", "multiple_choice", "true_false", "sequencing", "fill_blank", "short_answer", "scenario"],
+      "description": "题目类型"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["easy", "medium", "hard"],
+      "description": "题目难度"
+    },
+    "question": {
+      "type": "string",
+      "minLength": 10,
+      "description": "题目内容"
+    },
+    "options": {
+      "type": "object",
+      "description": "选项（选择题必填）",
+      "patternProperties": {
+        "^[A-F]$": {
+          "type": "string",
+          "description": "选项内容"
+        }
+      },
+      "minProperties": 2,
+      "maxProperties": 6
+    },
+    "correct_answer": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "单选/判断题答案"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "多选题答案"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "排序题答案（正确顺序）"
+        }
+      ],
+      "description": "正确答案"
+    },
+    "explanation": {
+      "type": "string",
+      "minLength": 20,
+      "description": "答案解析"
+    },
+    "test_prompt": {
+      "type": "string",
+      "description": "测试大模型时使用的完整prompt"
+    },
+    "knowledge_points": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "涉及的知识点标签"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["mitre", "cve", "paper", "blog", "documentation"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "参考资料"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["created_by", "created_at", "version"],
+      "properties": {
+        "created_by": {
+          "type": "string",
+          "description": "创建者（模型标识）"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "创建时间"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+$",
+          "description": "数据版本"
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否已验证"
+        },
+        "verification_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "验证得分"
+        },
+        "reviewer": {
+          "type": "string",
+          "description": "审核者"
+        },
+        "reviewed_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "审核时间"
+        },
+        "model_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "模型生成置信度"
+        }
+      }
+    }
+  }
+}

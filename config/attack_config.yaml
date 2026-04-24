@@ -1,0 +1,116 @@
+attack_framework:
+  version: "14.1"
+  source_url: "https://attack.mitre.org/docs/enterprise-attack.json"
+  matrices:
+    - enterprise
+    - mobile
+  
+tactics:
+  - id: TA0001
+    name: Initial Access
+    name_zh: 初始访问
+    description: 攻击者试图进入网络
+    priority: high
+    
+  - id: TA0002
+    name: Execution
+    name_zh: 执行
+    description: 攻击者试图运行恶意代码
+    priority: high
+    
+  - id: TA0003
+    name: Persistence
+    name_zh: 持久化
+    description: 攻击者试图维持访问权限
+    priority: high
+    
+  - id: TA0004
+    name: Privilege Escalation
+    name_zh: 权限提升
+    description: 攻击者试图获得更高权限
+    priority: high
+    
+  - id: TA0005
+    name: Defense Evasion
+    name_zh: 防御规避
+    description: 攻击者试图避免被检测
+    priority: high
+    
+  - id: TA0006
+    name: Credential Access
+    name_zh: 凭证访问
+    description: 攻击者试图窃取凭证
+    priority: high
+    
+  - id: TA0007
+    name: Discovery
+    name_zh: 发现
+    description: 攻击者试图了解环境
+    priority: medium
+    
+  - id: TA0008
+    name: Lateral Movement
+    name_zh: 横向移动
+    description: 攻击者试图在环境中移动
+    priority: high
+    
+  - id: TA0009
+    name: Collection
+    name_zh: 收集
+    description: 攻击者试图收集目标数据
+    priority: medium
+    
+  - id: TA0010
+    name: Exfiltration
+    name_zh: 数据渗出
+    description: 攻击者试图窃取数据
+    priority: high
+    
+  - id: TA0011
+    name: Command and Control
+    name_zh: 命令与控制
+    description: 攻击者试图与受控系统通信
+    priority: high
+    
+  - id: TA0040
+    name: Impact
+    name_zh: 影响
+    description: 攻击者试图破坏系统或数据
+    priority: high
+    
+  - id: TA0042
+    name: Resource Development
+    name_zh: 资源开发
+    description: 攻击者试图建立资源支持攻击
+    priority: medium
+    
+  - id: TA0043
+    name: Reconnaissance
+    name_zh: 侦察
+    description: 攻击者试图收集信息以支持攻击
+    priority: medium
+
+question_distribution:
+  per_technique:
+    single_choice: 2
+    multiple_choice: 1
+    true_false: 1
+    sequencing: 1
+    fill_blank: 1
+    short_answer: 1
+    scenario: 1
+    
+difficulty_distribution:
+  easy: 30
+  medium: 50
+  hard: 20
+
+coverage_requirements:
+  tactics: 100
+  techniques: 100
+  sub_techniques: 80
+  
+excluded_techniques:
+  - T1059.011
+  
+custom_techniques: []
