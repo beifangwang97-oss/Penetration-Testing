@@ -14,6 +14,7 @@ import json
 import os
 import time
 import re
+import sys
 import requests
 import threading
 from datetime import datetime
@@ -24,8 +25,43 @@ from tqdm import tqdm
 # 加载环境变量
 load_dotenv()
 
+# 避免 Windows 终端因 Unicode 符号输出失败
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 # 线程锁，用于文件写入同步
 file_lock = threading.Lock()
+
+
+def load_attack_id_name_map() -> dict:
+    """加载本地 ATT&CK ID 到名称的映射，用于约束审校结果不要偏离数据源。"""
+    attack_path = os.path.join("data", "attack_data.json")
+    if not os.path.exists(attack_path):
+        return {}
+
+    with open(attack_path, "r", encoding="utf-8") as f:
+        attack_data = json.load(f)
+
+    lookup = {}
+    for tactic in attack_data.get("tactics", []):
+        for technique in tactic.get("techniques", []):
+            tech_id = technique.get("id")
+            tech_name = technique.get("name", "").strip()
+            if tech_id and tech_name:
+                lookup[tech_id] = tech_name
+            for sub_technique in technique.get("sub_techniques", []):
+                sub_id = sub_technique.get("id")
+                sub_name = sub_technique.get("name", "").strip()
+                if sub_id and sub_name:
+                    lookup[sub_id] = sub_name
+
+    return lookup
+
+
+ATTACK_ID_NAME_MAP = load_attack_id_name_map()
 
 
 class OpenRouterClient:
@@ -160,6 +196,7 @@ D. {options.get('D', '')}
         scenario = question_data.get('scenario', '')
         related_techniques = question_data.get('related_techniques', [])
         scenario_tags = question_data.get('scenario_tags', [])
+        target_technique = get_primary_target_id(question_data)
 
         content = f"""{base_info}
 
@@ -173,6 +210,7 @@ C. {options.get('C', '')}
 D. {options.get('D', '')}
 
 正确答案：{correct_answer}
+目标技术：{target_technique}
 涉及技术：{', '.join(related_techniques)}
 场景标签：{', '.join(scenario_tags)}
 
@@ -185,6 +223,7 @@ D. {options.get('D', '')}
 6. 答案唯一性：是否存在唯一最优答案？
 7. 解析完整性：解析是否指出了场景中的关键证据，并解释其他选项为什么不最优？
 8. 难度合理性：难度等级是否与题目实际复杂度匹配？
+9. 目标一致性：优先保持题目围绕当前目标技术 `{target_technique}` 展开，不要把题目改写成另一种 ATT&CK 技术
 
 【输出要求】
 如果题目没有问题，请直接输出：无需修改
@@ -352,6 +391,83 @@ def extract_json(text: str) -> dict:
             return None
 
     try:
+        return json.loads(json_str)
+    except json.JSONDecodeError:
+        return None
+
+
+def extract_attack_ids(text: str) -> list[str]:
+    return re.findall(r"T\d{4}(?:\.\d{3})?", text or "")
+
+
+def parse_option_attack_mapping(option_text: str):
+    match = re.match(r"^\s*(.*?)\s*\((T\d{4}(?:\.\d{3})?)\)\s*$", option_text or "")
+    if not match:
+        return None, None
+    return match.group(1).strip(), match.group(2)
+
+
+def get_primary_target_id(question: dict) -> str:
+    tactic_technique = question.get("tactic_technique", "")
+    parts = [part for part in tactic_technique.split("-") if part]
+    return parts[-1] if parts else ""
+
+
+def get_correct_option_attack_id(question: dict) -> str:
+    options = question.get("options", {})
+    correct_answer = question.get("correct_answer", "")
+    correct_text = options.get(correct_answer, "")
+    ids = extract_attack_ids(correct_text)
+    return ids[0] if ids else ""
+
+
+def validate_reviewed_ssc_question(original_question: dict, reviewed_question: dict):
+    """校验 SSC 审校结果，防止模型把题目改成与本地 ATT&CK 数据不一致的新题。"""
+    options = reviewed_question.get("options", {})
+    if set(options.keys()) != {"A", "B", "C", "D"}:
+        return False, "选项结构无效"
+
+    correct_answer = reviewed_question.get("correct_answer", "")
+    if correct_answer not in {"A", "B", "C", "D"}:
+        return False, "correct_answer 非法"
+
+    seen_ids = set()
+    for key in ("A", "B", "C", "D"):
+        option_name, attack_id = parse_option_attack_mapping(options.get(key, ""))
+        if not option_name or not attack_id:
+            return False, f"选项 {key} 不是标准 ATT&CK 格式"
+        canonical_name = ATTACK_ID_NAME_MAP.get(attack_id)
+        if not canonical_name:
+            return False, f"选项 {key} 使用了本地 ATT&CK 中不存在的技术 ID {attack_id}"
+        if option_name != canonical_name:
+            return False, f"选项 {key} 的技术名与本地 ATT&CK 映射不一致"
+        if attack_id in seen_ids:
+            return False, f"多个选项复用了同一个 ATT&CK ID {attack_id}"
+        seen_ids.add(attack_id)
+
+    original_correct_id = get_correct_option_attack_id(original_question)
+    reviewed_correct_id = get_correct_option_attack_id(reviewed_question)
+    target_id = get_primary_target_id(original_question)
+
+    if not reviewed_correct_id:
+        return False, "无法解析审校后正确答案对应的 ATT&CK ID"
+    if original_correct_id and reviewed_correct_id != original_correct_id:
+        return False, f"审校将正确答案从 {original_correct_id} 改成了 {reviewed_correct_id}"
+    if target_id and reviewed_correct_id != target_id:
+        return False, f"审校结果偏离了当前题目的目标技术 {target_id}"
+
+    related_techniques = reviewed_question.get("related_techniques", [])
+    if not isinstance(related_techniques, list) or not related_techniques:
+        return False, "related_techniques 非法"
+    for tech_id in related_techniques:
+        if tech_id not in ATTACK_ID_NAME_MAP:
+            return False, f"related_techniques 中存在未知技术 ID {tech_id}"
+    if target_id and target_id not in related_techniques:
+        return False, f"related_techniques 未包含目标技术 {target_id}"
+
+    return True, ""
+
+    try:
         return json.loads(json_str.strip())
     except json.JSONDecodeError:
         return None
@@ -486,7 +602,7 @@ def process_single_question(args):
         # 无需修改，保留原题目
         reviewed_question = question
         status = "unchanged"
-        message = f"✓ {question_id} ({get_question_form_name(question_type)}): 无需修改"
+        message = f"OK {question_id} ({get_question_form_name(question_type)}): 无需修改"
     else:
         # 尝试提取修改后的JSON
         review_result = extract_json(response)
@@ -523,13 +639,27 @@ def process_single_question(args):
             
             # 更新test_prompt
             reviewed_question["test_prompt"] = update_test_prompt(reviewed_question, question_type)
-            status = "modified"
-            message = f"✓ {question_id} ({get_question_form_name(question_type)}): 已修改"
+
+            if question_type == 'SSC':
+                is_valid_review, validation_reason = validate_reviewed_ssc_question(question, reviewed_question)
+                if not is_valid_review:
+                    reviewed_question = question
+                    status = "unchanged"
+                    message = (
+                        f"OK {question_id} ({get_question_form_name(question_type)}): "
+                        f"审校修改未采纳，保留原题 ({validation_reason})"
+                    )
+                else:
+                    status = "modified"
+                    message = f"OK {question_id} ({get_question_form_name(question_type)}): 已修改"
+            else:
+                status = "modified"
+                message = f"OK {question_id} ({get_question_form_name(question_type)}): 已修改"
         else:
             # 解析失败，保留原题目
             reviewed_question = question
             status = "error"
-            message = f"✗ {question_id} ({get_question_form_name(question_type)}): 解析失败，保留原题目"
+            message = f"ERROR {question_id} ({get_question_form_name(question_type)}): 解析失败，保留原题目"
 
     return question, reviewed_question, status, message
 
@@ -627,7 +757,7 @@ def review_questions(model_name: str, input_path: str, output_dir: str = "review
                     print(message)
                     
                 except Exception as e:
-                    print(f"✗ 处理失败: {e}")
+                    print(f"ERROR 处理失败: {e}")
                     error_count += 1
                 
                 pbar.update(1)
