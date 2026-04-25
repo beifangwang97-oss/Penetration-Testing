@@ -340,6 +340,132 @@ scenario_single_choice: |
   10. 优先考查最具体、最贴合证据的技术粒度；若场景证据足以定位到子技术，就不要把答案写成父技术
   11. 场景中至少要有一处证据能直接支撑正确选项，而不是仅靠题外常识猜测
 
+scenario_multi_step_reasoning: |
+  You are generating a high-quality cybersecurity reasoning question based on MITRE ATT&CK.
+
+  Context:
+  - Tactic: {tactic_name} ({tactic_id}) - {tactic_description}
+  - Technique: {technique_name} ({technique_id})
+  - Sub-technique: {sub_technique_name} ({sub_technique_id})
+  - Technique description: {technique_description}
+
+  Generate one `scenario_multi_step_reasoning` question in JSON only.
+
+  Requirements:
+  - Use one shared scenario with realistic host, process, script, command-line, authentication, registry, or network clues.
+  - The scenario should be detailed enough to support 3 reasoning steps.
+  - Step 1 must be `technique_identification`, and its correct option must be `{sub_technique_name} ({sub_technique_id})`.
+  - Step 2 must be `next_step_prediction` and must ask for the most likely adversary next move, not a defender action.
+  - Step 3 must be `investigation_priority` and must ask what concrete evidence or artifact the defender should check first.
+  - Each step must have exactly 4 options: A, B, C, D.
+  - Only step 1 options should contain ATT&CK IDs. Steps 2 and 3 should use plain action-oriented text.
+  - Step 2 must avoid generic advice such as "review logs", "update passwords", or "notify users".
+  - Step 3 must focus on concrete evidence sources such as logs, registry keys, tasks, binaries, authentication events, host artifacts, firmware images, or network connections.
+  - Distractors must be plausible.
+  - `target_family` must include `{technique_id}`.
+  - `target_techniques` must include `{sub_technique_id}`.
+  - Return valid JSON only with no markdown fences.
+
+  Output schema:
+  {{
+    "title": "short title",
+    "scenario": "shared scenario",
+    "question": "overview sentence",
+    "difficulty": "easy or medium or hard",
+    "target_family": ["{technique_id}"],
+    "target_techniques": ["{sub_technique_id}"],
+    "steps": [
+      {{
+        "step_id": 1,
+        "reasoning_focus": "technique_identification",
+        "prompt": "step question",
+        "options": {{
+          "A": "option",
+          "B": "option",
+          "C": "option",
+          "D": "option"
+        }},
+        "correct_answer": "A",
+        "step_explanation": "why"
+      }},
+      {{
+        "step_id": 2,
+        "reasoning_focus": "next_step_prediction",
+        "prompt": "step question",
+        "options": {{
+          "A": "option",
+          "B": "option",
+          "C": "option",
+          "D": "option"
+        }},
+        "correct_answer": "B",
+        "step_explanation": "why"
+      }},
+      {{
+        "step_id": 3,
+        "reasoning_focus": "investigation_priority",
+        "prompt": "step question",
+        "options": {{
+          "A": "option",
+          "B": "option",
+          "C": "option",
+          "D": "option"
+        }},
+        "correct_answer": "C",
+        "step_explanation": "why"
+      }}
+    ],
+    "overall_explanation": "overall reasoning summary"
+  }}
+short_answer_reasoning: |
+  You are generating a short-answer cybersecurity reasoning question based on MITRE ATT&CK.
+
+  Context:
+  - Tactic: {tactic_name} ({tactic_id}) - {tactic_description}
+  - Technique: {technique_name} ({technique_id})
+  - Sub-technique: {sub_technique_name} ({sub_technique_id})
+  - Technique description: {technique_description}
+
+  Generate one `short_answer_reasoning` question in JSON only.
+
+  Requirements:
+  - Use a realistic security scenario with concrete evidence.
+  - The scenario must contain 2 to 4 evidence anchors that strongly distinguish the target from broader parent techniques or close ATT&CK neighbors.
+  - At least one evidence anchor must be specific enough that a careful learner can justify the exact ATT&CK technique or sub-technique, not just the parent family.
+  - The prompt must ask the learner to identify the exact ATT&CK technique or sub-technique ID and explain the evidence in 1-4 sentences.
+  - The expected answer must point to `{sub_technique_name} ({sub_technique_id})`, not only to a broader parent technique.
+  - The reference answer must explicitly cite 2 or more concrete clues from the scenario.
+  - The reference answer should briefly explain why the exact target is more precise than a broader or adjacent technique when that distinction matters.
+  - The question must stay focused and gradable.
+  - `target_family` must include `{technique_id}`.
+  - `target_techniques` must include `{sub_technique_id}`.
+  - `key_points` must contain 4 to 5 concrete grading points.
+  - `key_points` must cover: exact ATT&CK ID, concrete evidence clue 1, concrete evidence clue 2, and precision of reasoning.
+  - `scoring_rubric` weights must sum to 1.0.
+  - Return valid JSON only with no markdown fences.
+
+  Output schema:
+  {{
+    "title": "short title",
+    "scenario": "scenario text",
+    "prompt_type": "technique_judgment",
+    "prompt": "short answer prompt",
+    "difficulty": "easy or medium or hard",
+    "target_family": ["{technique_id}"],
+    "target_techniques": ["{sub_technique_id}"],
+    "reference_answer": "1-4 sentence answer with the exact ATT&CK ID and at least two scenario clues",
+    "key_points": [
+      "Exact identification of {sub_technique_id}",
+      "Concrete evidence clue 1 from the scenario",
+      "Concrete evidence clue 2 from the scenario",
+      "Why this exact target is more precise than a broader or adjacent technique"
+    ],
+    "scoring_rubric": {{
+      "technique_correct": 0.5,
+      "evidence_used": 0.3,
+      "reasoning_clear": 0.2
+    }}
+  }}
 review: |
   你是一位网络安全专家审核员，请审核以下渗透测试能力评估题目的质量：
 
