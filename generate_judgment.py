@@ -14,6 +14,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+from project_paths import DATASETS_GENERATED_DIR, ensure_standard_directories
 
 # 加载环境变量
 load_dotenv()
@@ -175,6 +176,8 @@ def generate_judgment_question(
             reorganized_data = {
                 "question_id": f"JU-{question_index:03d}",
                 "tactic_technique": f"{tactic.get('id', '')}-{technique.get('id', '')}-{sub_technique.get('id', technique.get('id', ''))}",
+                "question_form": "judgment",
+                "capability_dimension": "fact_verification",
                 "difficulty": data.get("difficulty", "medium"),  # 从模型输出获取难度
                 "question": data.get("question", ""),
                 "correct_answer": data.get("correct_answer", ""),
@@ -307,7 +310,8 @@ def main():
     print(f"确认生成 {len(tasks)} 道判断题")
 
     # 准备输出文件
-    output_dir = "output"
+    ensure_standard_directories()
+    output_dir = str(DATASETS_GENERATED_DIR)
     os.makedirs(output_dir, exist_ok=True)
     output_file = f"{output_dir}/{test_model_id}_ju_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     

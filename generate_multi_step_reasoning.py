@@ -12,6 +12,7 @@ import requests
 import yaml
 from dotenv import load_dotenv
 from tqdm import tqdm
+from project_paths import DATASETS_GENERATED_DIR, ensure_standard_directories
 
 from generate_scenario_single_choice import build_generation_tasks, load_attack_data
 
@@ -329,6 +330,8 @@ def generate_question(
                 "question_id": f"MSR-{question_index:03d}",
                 "tactic_technique": f"{tactic.get('id', '')}-{technique.get('id', '')}-{target_id}",
                 "question_type": "scenario_multi_step_reasoning",
+                "question_form": "scenario_multi_step_reasoning",
+                "capability_dimension": "multi_step_reasoning",
                 "difficulty": data["difficulty"],
                 "title": data["title"],
                 "scenario": data["scenario"],
@@ -361,7 +364,7 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--no-shuffle", action="store_true")
     parser.add_argument("--output-file", default="")
-    parser.add_argument("--output-dir", default="output/reasoning/msr")
+    parser.add_argument("--output-dir", default=str(DATASETS_GENERATED_DIR))
     parser.add_argument("--task-mode", choices=["family", "full"], default="family")
     return parser.parse_args()
 
@@ -389,6 +392,7 @@ def main():
         tasks = tasks[: args.limit]
 
     output_dir = args.output_dir
+    ensure_standard_directories()
     os.makedirs(output_dir, exist_ok=True)
     output_file = args.output_file or f"{output_dir}/{args.model_id}_msr_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
 

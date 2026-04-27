@@ -11,6 +11,9 @@ import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
 
+from attack_id_aliases import canonicalize_attack_id, canonicalize_attack_ids
+from project_paths import RESULTS_EVALUATIONS_DIR, ensure_standard_directories
+
 load_dotenv()
 
 try:
@@ -111,12 +114,12 @@ def token_overlap_score(source: str, answer_tokens: set[str]) -> float:
 
 
 def technique_match_score(question: dict, model_answer: str) -> float:
-    target_ids = question.get("target_techniques", [])
+    target_ids = canonicalize_attack_ids(question.get("target_techniques", []))
     if not target_ids:
         return 0.0
     target_id = target_ids[0]
     parent_id = target_id.split(".")[0]
-    answer_ids = set(extract_attack_ids(model_answer))
+    answer_ids = set(canonicalize_attack_ids(extract_attack_ids(model_answer)))
     if target_id in answer_ids:
         return 1.0
     if parent_id in answer_ids:
@@ -210,10 +213,10 @@ def score_sar(question: dict, model_answer: str, client: OpenRouterClient, judge
     sentence_count = len([part for part in re.split(r"[.!?]+", model_answer or "") if part.strip()])
     format_relevance = 1.0 if model_answer and sentence_count <= 4 else 0.5
 
-    target_id = (question.get("target_techniques") or [""])[0]
+    target_id = canonicalize_attack_id((question.get("target_techniques") or [""])[0])
     parent_id = target_id.split(".")[0] if target_id else ""
     exactness_hit = 1.0
-    answer_ids = set(extract_attack_ids(model_answer))
+    answer_ids = set(canonicalize_attack_ids(extract_attack_ids(model_answer)))
     if target_id and target_id != parent_id and target_id not in answer_ids:
         if parent_id in answer_ids:
             exactness_hit = 0.0
@@ -300,7 +303,7 @@ def parse_args():
     parser.add_argument("--input", required=True)
     parser.add_argument("--answer-model", default="openai/gpt-4o-mini")
     parser.add_argument("--judge-model", default="openai/gpt-4o-mini")
-    parser.add_argument("--output-dir", default="results/reasoning")
+    parser.add_argument("--output-dir", default=str(RESULTS_EVALUATIONS_DIR))
     parser.add_argument("--max-workers", type=int, default=2)
     return parser.parse_args()
 
@@ -318,6 +321,7 @@ def main():
         return
 
     client = OpenRouterClient(api_key)
+    ensure_standard_directories()
     os.makedirs(args.output_dir, exist_ok=True)
     answer_tag = args.answer_model.split("/")[-1]
     judge_tag = args.judge_model.split("/")[-1]

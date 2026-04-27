@@ -12,6 +12,7 @@
 import json
 import os
 from collections import defaultdict
+from question_metadata import resolve_capability_dimension, resolve_question_form
 
 
 def process_file(file_path):
@@ -91,13 +92,11 @@ def evaluate_dataset_folder(folder_path):
         # 统计每个文件的内容
         for q in questions:
             # 统计题型（根据question_id）
-            question_id = q.get("question_id", "")
-            if question_id:
-                q_type = question_id.split("-")[0] if "-" in question_id else "Unknown"
-                question_types[q_type] += 1
+            q_type = resolve_question_form(q)
+            question_types[q_type] += 1
             
             # 统计question_type标签
-            q_type_tag = q.get("question_type", "Unknown")
+            q_type_tag = resolve_capability_dimension(q)
             question_type_tags[q_type_tag] += 1
             
             # 统计战术技术

@@ -12,6 +12,8 @@ import json
 import os
 from collections import defaultdict
 from datetime import datetime
+from project_paths import RESULTS_ANALYSIS_DIR, attack_data_path, ensure_standard_directories
+from question_metadata import resolve_question_form
 
 
 def load_questions(input_path: str) -> list:
@@ -25,13 +27,14 @@ def load_questions(input_path: str) -> list:
     return questions
 
 
-def load_attack_data(attack_data_path: str = "data/attack_data.json") -> dict:
+def load_attack_data(attack_data_path_value: str = "") -> dict:
     """加载ATT&CK框架数据"""
-    if not os.path.exists(attack_data_path):
+    attack_data_path_value = attack_data_path_value or str(attack_data_path())
+    if not os.path.exists(attack_data_path_value):
         print(f"警告: ATT&CK数据文件不存在: {attack_data_path}")
         return {"tactics": {}, "techniques": {}, "sub_techniques": {}}
 
-    with open(attack_data_path, 'r', encoding='utf-8') as f:
+    with open(attack_data_path_value, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
     tactics = {}
@@ -66,7 +69,7 @@ def load_attack_data(attack_data_path: str = "data/attack_data.json") -> dict:
     }
 
 
-def evaluate_dataset(input_path: str, output_dir: str = "evaluation_output"):
+def evaluate_dataset(input_path: str, output_dir: str = str(RESULTS_ANALYSIS_DIR / "dataset_quality")):
     """评估数据集质量"""
     print(f"开始评估数据集质量")
     print(f"输入文件: {input_path}")
@@ -100,10 +103,8 @@ def evaluate_dataset(input_path: str, output_dir: str = "evaluation_output"):
 
     for idx, q in enumerate(questions, 1):
         # 统计题型
-        question_id = q.get("question_id", "")
-        if question_id:
-            q_type = question_id.split("-")[0] if "-" in question_id else "Unknown"
-            question_types[q_type] += 1
+        q_type = resolve_question_form(q)
+        question_types[q_type] += 1
 
         # 统计难度
         difficulty = q.get("difficulty", "unknown")
@@ -134,7 +135,7 @@ def evaluate_dataset(input_path: str, output_dir: str = "evaluation_output"):
             issues.append("缺少解析")
         if not q.get("test_prompt"):
             issues.append("缺少测试prompt")
-        if q_type == "SSC":
+        if q_type == "scenario_single_choice":
             if not q.get("scenario"):
                 issues.append("缺少场景描述")
             elif len(q.get("scenario", "").strip()) < 60:
@@ -322,8 +323,8 @@ def main():
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="evaluation_output",
-        help="输出目录（默认: evaluation_output）"
+        default=str(RESULTS_ANALYSIS_DIR / "dataset_quality"),
+        help="数据集质量评估结果输出目录"
     )
 
     args = parser.parse_args()

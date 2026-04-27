@@ -21,6 +21,7 @@ import requests
 import yaml
 from dotenv import load_dotenv
 from tqdm import tqdm
+from project_paths import DATASETS_GENERATED_DIR, attack_data_path, ensure_standard_directories
 
 load_dotenv()
 
@@ -33,7 +34,7 @@ except Exception:
 
 
 def load_attack_data():
-    cache_path = "data/attack_data.json"
+    cache_path = str(attack_data_path())
     if os.path.exists(cache_path):
         from attack_data_loader import load_parsed_data
 
@@ -425,6 +426,8 @@ def generate_scenario_question(
                 "question_id": f"SSC-{question_index:03d}",
                 "tactic_technique": f"{tactic.get('id', '')}-{technique.get('id', '')}-{primary_sub}",
                 "question_type": "scenario_single_choice",
+                "question_form": "scenario_single_choice",
+                "capability_dimension": "scenario_technique_identification",
                 "difficulty": data.get("difficulty", "medium"),
                 "scenario": data.get("scenario", ""),
                 "question": data.get("question", ""),
@@ -572,7 +575,8 @@ def main():
     print(f"任务模式: {args.task_mode}")
     print(f"计划生成 {len(tasks)} 道场景单选题")
 
-    output_dir = "output"
+    ensure_standard_directories()
+    output_dir = str(DATASETS_GENERATED_DIR)
     os.makedirs(output_dir, exist_ok=True)
     output_file = args.output_file or f"{output_dir}/{model_id}_ssc_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jsonl"
 

@@ -12,6 +12,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+from project_paths import DATASETS_GENERATED_DIR, attack_data_path, ensure_standard_directories
 
 # 加载环境变量
 load_dotenv()
@@ -23,7 +24,7 @@ def load_config(config_path: str) -> dict:
 
 
 def load_attack_data():
-    cache_path = "data/attack_data.json"
+    cache_path = str(attack_data_path())
     if os.path.exists(cache_path):
         from attack_data_loader import load_parsed_data
         return load_parsed_data(cache_path)
@@ -186,6 +187,8 @@ def generate_single_question(
                 "question_id": f"SC-{question_index:03d}",
                 "tactic_technique": f"{tactic.get('id', '')}-{technique.get('id', '')}-{sub_technique.get('id', technique.get('id', ''))}",
                 "question_type": question_type,
+                "question_form": "single_choice",
+                "capability_dimension": question_type,
                 "difficulty": data.get("difficulty", "medium"),
                 "question": data.get("question", ""),
                 "options": data.get("options", {}),
@@ -327,7 +330,8 @@ def main():
     print(f"确认生成 {len(tasks)} 道题目")
 
     # 准备输出文件
-    output_dir = "output"
+    ensure_standard_directories()
+    output_dir = str(DATASETS_GENERATED_DIR)
     os.makedirs(output_dir, exist_ok=True)
     output_file = f"{output_dir}/{test_model_id}_sc_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     

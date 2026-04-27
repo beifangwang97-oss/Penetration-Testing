@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -10,6 +11,7 @@ from datetime import datetime
 import requests
 from dotenv import load_dotenv
 from tqdm import tqdm
+from project_paths import DATASETS_REVIEWED_DIR, RESULTS_REVIEWS_DIR, ensure_standard_directories
 
 load_dotenv()
 
@@ -328,7 +330,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Review MSR/SAR questions")
     parser.add_argument("--input", required=True)
     parser.add_argument("--model", default="openai/gpt-4o-mini")
-    parser.add_argument("--output-dir", default="review_output/reasoning")
+    parser.add_argument("--output-dir", default=str(DATASETS_REVIEWED_DIR))
     parser.add_argument("--max-workers", type=int, default=2)
     return parser.parse_args()
 
@@ -346,15 +348,21 @@ def main():
         return
 
     client = OpenRouterClient(api_key)
+    ensure_standard_directories()
     os.makedirs(args.output_dir, exist_ok=True)
     model_id = args.model.split("/")[-1]
     type_tag = questions[0].get("question_id", "UNK").split("-")[0]
     output_file = os.path.join(args.output_dir, f"review_{model_id}_{type_tag}_{len(questions)}.jsonl")
-    summary_file = os.path.join(args.output_dir, f"review_summary_{model_id}_{type_tag}_{len(questions)}.json")
+    summary_dir = str(RESULTS_REVIEWS_DIR / "reasoning")
+    os.makedirs(summary_dir, exist_ok=True)
+    summary_file = os.path.join(summary_dir, f"review_summary_{model_id}_{type_tag}_{len(questions)}.json")
 
     counts = {"unchanged": 0, "modified": 0, "invalid_original": 0, "review_parse_failed": 0, "review_invalid": 0, "unsupported_type": 0}
 
     reviewed_items = []
+    file_lock = threading.Lock()
+    with open(output_file, "w", encoding="utf-8") as _:
+        pass
     with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
         futures = {executor.submit(process_question, q, client, args.model): q for q in questions}
         with tqdm(total=len(questions), desc="Reviewing reasoning questions", unit="q") as progress:
@@ -363,6 +371,9 @@ def main():
                 status_key = status.split(":", 1)[0]
                 counts[status_key] = counts.get(status_key, 0) + 1
                 reviewed_items.append(reviewed)
+                with file_lock:
+                    with open(output_file, "a", encoding="utf-8") as f:
+                        f.write(json.dumps(reviewed, ensure_ascii=False) + "\n")
                 progress.update(1)
 
     reviewed_items.sort(key=lambda item: item.get("question_id", ""))

@@ -13,13 +13,14 @@ from datetime import datetime
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+from project_paths import DATASETS_GENERATED_DIR, attack_data_path, ensure_standard_directories
 
 # 加载环境变量
 load_dotenv()
 
 
 def load_attack_data():
-    cache_path = "data/attack_data.json"
+    cache_path = str(attack_data_path())
     if os.path.exists(cache_path):
         from attack_data_loader import load_parsed_data
         return load_parsed_data(cache_path)
@@ -231,6 +232,8 @@ def generate_multiple_questions(
             reorganized_data = {
                 "question_id": f"MC-{question_index:03d}",
                 "tactic_technique": f"{tactic.get('id', '')}-multiple",
+                "question_form": "multiple_choice",
+                "capability_dimension": "technique_association_analysis",
                 "question_type": "技术关联分析",
                 "difficulty": data.get("difficulty", "medium"),
                 "question": data.get("question", ""),
@@ -489,7 +492,8 @@ def main():
     print(f"共生成 {len(tasks)} 个任务，预计生成 {question_index - 1} 道多选题")
 
     # 准备输出文件
-    output_dir = "output"
+    ensure_standard_directories()
+    output_dir = str(DATASETS_GENERATED_DIR)
     os.makedirs(output_dir, exist_ok=True)
     output_file = f"{output_dir}/{test_model_id}_mc_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     

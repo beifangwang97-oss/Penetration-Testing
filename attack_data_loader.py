@@ -7,6 +7,7 @@ import json
 import requests
 from typing import Dict, List, Any
 import os
+from project_paths import DATA_PROCESSED_DIR, ensure_standard_directories
 
 
 def download_attack_data(version: str = "15.1") -> Dict[str, Any]:
@@ -204,6 +205,7 @@ def main():
     主函数
     """
     # 下载数据
+    ensure_standard_directories()
     raw_data = download_attack_data()
     
     if not raw_data:
@@ -214,7 +216,7 @@ def main():
     parsed_data = parse_attack_data(raw_data)
     
     # 保存数据
-    output_path = "data/attack_data.json"
+    output_path = str(DATA_PROCESSED_DIR / "attack_data.json")
     save_parsed_data(parsed_data, output_path)
     
     # 统计信息

@@ -1,223 +1,257 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "ATT&CK渗透测试能力评估数据集Schema",
-  "description": "定义数据集中每条题目的标准格式",
+  "title": "ATT&CK LLM Penetration Testing Question Schema v2",
+  "description": "Unified schema for all supported question forms. `question_form` is the canonical question-form field. `capability_dimension` is the canonical assessment-dimension field. `question_type` is retained only as a legacy compatibility field.",
   "type": "object",
   "required": [
     "question_id",
-    "tactic",
-    "technique",
-    "sub_technique",
-    "question_type",
+    "question_form",
+    "capability_dimension",
     "difficulty",
     "question",
     "correct_answer",
-    "explanation",
-    "test_prompt",
-    "metadata"
+    "test_prompt"
   ],
   "properties": {
     "question_id": {
+      "type": "string"
+    },
+    "tactic_technique": {
+      "type": "string"
+    },
+    "question_form": {
       "type": "string",
-      "pattern": "^T\\d+(\\.\\d+)?-[A-Z]{2}-\\d{3}$",
-      "description": "题目唯一标识，格式：技术ID-题型编码-序号，如T1566.001-SC-001"
+      "enum": [
+        "single_choice",
+        "multiple_choice",
+        "judgment",
+        "sequencing",
+        "scenario_single_choice",
+        "scenario_multi_step_reasoning",
+        "short_answer_reasoning"
+      ]
     },
-    "tactic": {
-      "type": "object",
-      "required": ["id", "name", "name_zh"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^TA\\d{4}$",
-          "description": "战术ID，如TA0001"
-        },
-        "name": {
-          "type": "string",
-          "description": "战术英文名称"
-        },
-        "name_zh": {
-          "type": "string",
-          "description": "战术中文名称"
-        }
-      }
-    },
-    "technique": {
-      "type": "object",
-      "required": ["id", "name", "name_zh"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^T\\d{4}$",
-          "description": "技术ID，如T1566"
-        },
-        "name": {
-          "type": "string",
-          "description": "技术英文名称"
-        },
-        "name_zh": {
-          "type": "string",
-          "description": "技术中文名称"
-        },
-        "description": {
-          "type": "string",
-          "description": "技术描述"
-        }
-      }
-    },
-    "sub_technique": {
-      "type": "object",
-      "required": ["id", "name", "name_zh"],
-      "properties": {
-        "id": {
-          "type": "string",
-          "pattern": "^T\\d{4}\\.\\d{3}$",
-          "description": "子技术ID，如T1566.001"
-        },
-        "name": {
-          "type": "string",
-          "description": "子技术英文名称"
-        },
-        "name_zh": {
-          "type": "string",
-          "description": "子技术中文名称"
-        },
-        "description": {
-          "type": "string",
-          "description": "子技术描述"
-        }
-      }
+    "capability_dimension": {
+      "type": "string"
     },
     "question_type": {
       "type": "string",
-      "enum": ["single_choice", "multiple_choice", "true_false", "sequencing", "fill_blank", "short_answer", "scenario"],
-      "description": "题目类型"
+      "description": "Deprecated legacy field kept for backward compatibility."
     },
     "difficulty": {
       "type": "string",
-      "enum": ["easy", "medium", "hard"],
-      "description": "题目难度"
+      "enum": ["easy", "medium", "hard"]
     },
     "question": {
       "type": "string",
-      "minLength": 10,
-      "description": "题目内容"
+      "minLength": 1
+    },
+    "title": {
+      "type": "string"
+    },
+    "scenario": {
+      "type": "string"
     },
     "options": {
       "type": "object",
-      "description": "选项（选择题必填）",
       "patternProperties": {
         "^[A-F]$": {
-          "type": "string",
-          "description": "选项内容"
+          "type": "string"
         }
       },
-      "minProperties": 2,
-      "maxProperties": 6
+      "additionalProperties": false
     },
     "correct_answer": {
       "oneOf": [
-        {
-          "type": "string",
-          "description": "单选/判断题答案"
-        },
+        { "type": "string" },
         {
           "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "多选题答案"
-        },
-        {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "排序题答案（正确顺序）"
+          "items": { "type": "string" }
         }
-      ],
-      "description": "正确答案"
+      ]
     },
     "explanation": {
-      "type": "string",
-      "minLength": 20,
-      "description": "答案解析"
+      "type": "string"
+    },
+    "overall_explanation": {
+      "type": "string"
     },
     "test_prompt": {
-      "type": "string",
-      "description": "测试大模型时使用的完整prompt"
+      "type": "string"
     },
-    "knowledge_points": {
+    "involved_techniques": {
       "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "涉及的知识点标签"
+      "items": { "type": "string" }
     },
-    "references": {
+    "related_techniques": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scenario_tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "target_family": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "target_techniques": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "steps": {
       "type": "array",
       "items": {
         "type": "object",
+        "required": ["step_id", "reasoning_focus", "prompt", "options", "correct_answer"],
         "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["mitre", "cve", "paper", "blog", "documentation"]
+          "step_id": { "type": "integer" },
+          "reasoning_focus": { "type": "string" },
+          "prompt": { "type": "string" },
+          "options": {
+            "type": "object",
+            "patternProperties": {
+              "^[A-D]$": { "type": "string" }
+            },
+            "additionalProperties": false
           },
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "title": {
-            "type": "string"
-          }
+          "correct_answer": { "type": "string" },
+          "step_explanation": { "type": "string" }
         }
-      },
-      "description": "参考资料"
+      }
+    },
+    "prompt_type": {
+      "type": "string"
+    },
+    "prompt": {
+      "type": "string"
+    },
+    "reference_answer": {
+      "type": "string"
+    },
+    "key_points": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "scoring_rubric": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      }
     },
     "metadata": {
-      "type": "object",
-      "required": ["created_by", "created_at", "version"],
-      "properties": {
-        "created_by": {
-          "type": "string",
-          "description": "创建者（模型标识）"
-        },
-        "created_at": {
-          "type": "string",
-          "format": "date-time",
-          "description": "创建时间"
-        },
-        "version": {
-          "type": "string",
-          "pattern": "^\\d+\\.\\d+$",
-          "description": "数据版本"
-        },
-        "verified": {
-          "type": "boolean",
-          "default": false,
-          "description": "是否已验证"
-        },
-        "verification_score": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "验证得分"
-        },
-        "reviewer": {
-          "type": "string",
-          "description": "审核者"
-        },
-        "reviewed_at": {
-          "type": "string",
-          "format": "date-time",
-          "description": "审核时间"
-        },
-        "model_confidence": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "description": "模型生成置信度"
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "single_choice" }
+        }
+      },
+      "then": {
+        "required": ["options", "explanation"],
+        "properties": {
+          "correct_answer": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "multiple_choice" }
+        }
+      },
+      "then": {
+        "required": ["options", "explanation", "involved_techniques"],
+        "properties": {
+          "correct_answer": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "judgment" }
+        }
+      },
+      "then": {
+        "required": ["explanation"],
+        "properties": {
+          "correct_answer": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "sequencing" }
+        }
+      },
+      "then": {
+        "required": ["options", "explanation", "involved_techniques"],
+        "properties": {
+          "correct_answer": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "scenario_single_choice" }
+        }
+      },
+      "then": {
+        "required": ["scenario", "options", "explanation", "related_techniques", "scenario_tags"],
+        "properties": {
+          "correct_answer": { "type": "string" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "scenario_multi_step_reasoning" }
+        }
+      },
+      "then": {
+        "required": ["title", "scenario", "steps", "overall_explanation", "target_family", "target_techniques"],
+        "properties": {
+          "correct_answer": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "question_form": { "const": "short_answer_reasoning" }
+        }
+      },
+      "then": {
+        "required": [
+          "title",
+          "scenario",
+          "prompt_type",
+          "reference_answer",
+          "key_points",
+          "scoring_rubric",
+          "target_family",
+          "target_techniques"
+        ],
+        "properties": {
+          "correct_answer": { "type": "string" }
         }
       }
     }
-  }
+  ]
 }

@@ -21,6 +21,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
+from project_paths import DATASETS_REVIEWED_DIR, ensure_standard_directories
 
 # 加载环境变量
 load_dotenv()
@@ -664,7 +665,7 @@ def process_single_question(args):
     return question, reviewed_question, status, message
 
 
-def review_questions(model_name: str, input_path: str, output_dir: str = "review_output", max_workers: int = 3):
+def review_questions(model_name: str, input_path: str, output_dir: str = str(DATASETS_REVIEWED_DIR), max_workers: int = 3):
     """审查题目（支持并发）"""
     print(f"开始审查题目")
     print(f"使用模型: {model_name}")
@@ -695,6 +696,7 @@ def review_questions(model_name: str, input_path: str, output_dir: str = "review
         question_type_abbr = "UNKNOWN"
 
     # 准备输出文件 - 新命名格式：review_审查模型_题目类型_题目数量.jsonl
+    ensure_standard_directories()
     os.makedirs(output_dir, exist_ok=True)
     
     # 提取模型名称（去掉路径前缀）
